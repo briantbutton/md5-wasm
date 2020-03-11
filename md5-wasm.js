@@ -1,30 +1,26 @@
 /*!
- * Native MD5
- * https://github.com/briantbutton/native-md5
- * (c) 2018-2019 Brian Todd Button
+ * MD5 WebAssembly
+ * https://github.com/briantbutton/md5-wasm
+ * (c) 2020 Brian Todd Button
  * Released under the MIT license
  */
 
 
 // *-*=*  *=*-* *-*=*  *=*-* *-*=*  *=*-* *-*=*  *=*-* *-*=*  *=*-* *-*=*  *=*-*
-// This function loads the specific type-faces and returns the superconstructor
-// If BABYLON is loaded, it assigns the superconstructor to BABYLON.MeshWriter
-// Otherwise it assigns it to global variable 'BABYLONTYPE'
+// This is two functions designed to achieve the same thing
+// A highly tuned WebAssembly function for larger files 
+// A JavaScript function for the others
 // 
-// Note to developers:  Helvetica Neue Medium is assumed, by the code, to be present
-//                      Do NOT remove it during customization
 
 (function() {
 
   const md5JS           = makeMD5JS(),
         md5WA           = makeMD5WA(),
-        worker_threads  = require("worker_threads"),
         atob            = require("atob"),
         crypt           = makeCrypt(),
         biteSize        = 240*16*16,
         bounder         = Math.floor(biteSize*16*1.066606667),
         returnObj       = {};
-  // This version is very stable
   const wasmB64         = "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";
   var   js              = false,
         onResult        = false,
@@ -43,7 +39,6 @@
 
   return md5;
 
-  //
   function md5(data){
     var md5String       = false;
     if ( typeof Buffer === "function" ) {
@@ -59,6 +54,7 @@
 
       if ( buff && typeof buff === "object" && buff.constructor === Buffer ) {
         if ( WebAssembly && !js && buff.length > bounder ) {
+          mem           = new WebAssembly.Memory({initial:(buff.length>32000000?buff.length>64000000?2048:1024:512)});
           mem           = new WebAssembly.Memory({initial:1024});
           memView       = new Uint32Array(mem.buffer);
           importObj     = {imports:{}};
@@ -100,14 +96,13 @@
 
   function makeMD5WA(){
 
-    // The core
     var md5WA           = function (message, options) {
       var m00,m01,m02,m03,m04,m05,m06,m07,m08,m09,m10,m11,m12,m13,m14,m15,aa,bb,cc,dd,m,k;
       var qwerty        = new Date().getTime();
       var md5Used       = 0;
       var legacy        = false;
 
-      console.log("md5 start");
+      // console.log("md5 start");
 
       var a             =  1732584193,
           b             = -271733879,
@@ -116,22 +111,14 @@
           i             =  0,
           l             = message.length*8,len;
 
-      var FFF           = md5WA.____ff,
-          GGG           = md5WA.____gg,
-          HHH           = md5WA.____hh,
-          III           = md5WA.____ii;
-
-      /* */
       if(legacy){
         m               = crypt.bytesToWords(message);
         for (var j = 0; j < m.length; j++) {
           m[j]          = ((m[j] <<  8) | (m[j] >>> 24)) & 0x00FF00FF | ((m[j] << 24) | (m[j] >>>  8)) & 0xFF00FF00;
         }
-        console.log("m.length = "+(m.length));
-        console.log("l>>>5 = "+(l>>>5));
+        // console.log("m.length = "+(m.length));
         m[l >>> 5]     |= 0x80 << (l % 32);
         m[(((l + 64) >>> 9) << 4) + 14] = l;
-        console.log("(((l + 64) >>> 9) << 4) + 14 = "+((((l + 64) >>> 9) << 4) + 14));
         len             = m.length;
       }else{
         len             = bytesToWordsNewer(message,memView);
@@ -141,10 +128,10 @@
         m               = memView
       }
 
-      console.log("first loop took "+((new Date().getTime())-qwerty)+"ms");
+      // console.log("first loop took "+((new Date().getTime())-qwerty)+"ms");
 
       while ( i < len ) {
-        if(!legacy&&(md5Used===0  ||md5Used===1 ||md5Used>1  )&&len>i+bounder){
+        if(!legacy&&len>i+bounder){
           setA(a);
           setB(b);
           setC(c);
@@ -254,35 +241,12 @@
         }
       }
 
-      console.log("md5WA, elapsed="+((new Date().getTime())-qwerty)+(md5Used?", WebAssembly called "+md5Used+" times":", WebAssembly not called"));
+      // console.log("md5WA, elapsed="+((new Date().getTime())-qwerty)+(md5Used?", WebAssembly called "+md5Used+" times":", WebAssembly not called"));
 
       return crypt.endian([a, b, c, d]);
 
       function ____(s,t,n){ return ( ( n << s ) | ( n >>> t ) ) }
-    
-      // Convert a byte array to big-endian 32-bit words
-      function bytesToWordsOld(bytes) {
-        for (var words = [], i = 0, b = 0; i < bytes.length; i++, b += 8)
-          words[b >>> 5] |= bytes[i] << (24 - b % 32);
-        return words;
-      }
-      // Convert a byte array to big-endian 32-bit words
-      function bytesToWordsNew(bytes) {
-        var i=-1,l=Math.floor(bytes.length/4),j=0,words=new Array(Math.floor((bytes.length-1)/4)+1),b0,b1,b2,b3;
-        while(l-8>i++){
-          j             = i<<2;
-          words[i]      = (bytes[j+0]) | (bytes[j+1]<<8) | (bytes[j+2]<<16) | (bytes[j+3]<<24)
-        }
-        while(l>i++){
-          j             = i<<2;
-          b0            = typeof bytes[j+0] === "undefined" ? 0 : bytes[j+0];
-          b1            = typeof bytes[j+1] === "undefined" ? 0 : bytes[j+1];
-          b2            = typeof bytes[j+2] === "undefined" ? 0 : bytes[j+2];
-          b3            = typeof bytes[j+3] === "undefined" ? 0 : bytes[j+3];
-          words[i]      = b0 | b1<<8 | b2<<16 | b3<<24
-        }
-        return words;
-      }
+
       // Convert a byte array to big-endian 32-bit words
       function bytesToWordsNewer(bytes,words) {
         var i           = -1,
@@ -305,30 +269,6 @@
       }
     };
 
-    // Auxiliary functions
-    md5WA.____ff  = function (s, t, n) {
-      return ((n << s) | (n >>> t));
-    };
-
-    // Auxiliary functions
-    md5WA.____gg  = function (s, t, n) {
-      return ((n << s) | (n >>> t));
-    };
-
-    // Auxiliary functions
-    md5WA.____hh  = function (s, t, n) {
-      return ((n << s) | (n >>> t));
-    };
-
-    // Auxiliary functions
-    md5WA.____ii  = function (s, t, n) {
-      return ((n << s) | (n >>> t));
-    };
-
-    // Package private blocksize
-    md5WA._blocksize = 16;
-    md5WA._digestsize = 16;
-
     return function (message, options) {
       if (message === undefined || message === null)
         throw new Error('Illegal argument ' + message);
@@ -347,18 +287,13 @@
       var m00,m01,m02,m03,m04,m05,m06,m07,m08,m09,m10,m11,m12,m13,m14,m15,aa,bb,cc,dd,m;
       var qwerty      = new Date().getTime();
 
-      console.log("md5 start");
+      // console.log("md5 start");
 
       var a           =  1732584193,
           b           = -271733879,
           c           = -1732584194,
           d           =  271733878,
           l           = message.length * 8;
-
-      var FFF         = md5JS.____ff,
-          GGG         = md5JS.____gg,
-          HHH         = md5JS.____hh,
-          III         = md5JS.____ii;
 
       m               = crypt.bytesToWords(message);
 
@@ -467,36 +402,12 @@
         d = (d + dd) >>> 0;
       }
 
-      console.log("md5JS, elapsed="+((new Date().getTime())-qwerty));
+      // console.log("md5JS, elapsed="+((new Date().getTime())-qwerty));
 
       return crypt.endian([a, b, c, d]);
 
       function ____(s,t,n){ return ( ( n << s ) | ( n >>> t ) ) }
     };
-
-    // Auxiliary functions
-    md5JS.____ff  = function (s, t, n) {
-      return ((n << s) | (n >>> t));
-    };
-
-    // Auxiliary functions
-    md5JS.____gg  = function (s, t, n) {
-      return ((n << s) | (n >>> t));
-    };
-
-    // Auxiliary functions
-    md5JS.____hh  = function (s, t, n) {
-      return ((n << s) | (n >>> t));
-    };
-
-    // Auxiliary functions
-    md5JS.____ii  = function (s, t, n) {
-      return ((n << s) | (n >>> t));
-    };
-
-    // Package private blocksize
-    md5JS._blocksize = 16;
-    md5JS._digestsize = 16;
 
     return function (message, options) {
       if (message === undefined || message === null)

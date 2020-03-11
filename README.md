@@ -1,6 +1,14 @@
 # MD5 WASM
 
-Generate letters in BABYLON meshes.
+MD5 WASM is an asynchronous MD5 calculator, optimized for large files.
+It only accepts ArrayBuffer views (Uint8Array) and NodeJS Buffers, no Strings.
+It is called using a Promise-style syntax, with 'then' and 'catch'.
+WebAssembly is used to calculate MD5 values for files above a certain size threshold.
+
+## Experimental!
+
+This repo is not yet at release 1.
+Use it for NodeJS only -- no browser support.
 
 ## Javascript Calls And Parameters
 
