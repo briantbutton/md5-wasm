@@ -1,0 +1,12 @@
+# The ubiquitous DS_Store files from Apple OS
+.DS_Store
+
+# This one
+r.js
+node_modules
+.npmignore
+oldfontfiles
+READMECSG.md
+build.type.js
+md5-duo-ref.js
+
