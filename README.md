@@ -10,27 +10,40 @@ WebAssembly is used to calculate MD5 values for files above a certain size thres
 This repo is not yet at release 1.
 Use it for NodeJS only -- no browser support.
 
+## Raison d'être &nbsp; (Reason for being)
+
+### Background
+
+Our MD5 hashing was initially performed using this wonderfully simple utility:
+https://www.npmjs.com/package/md5
+It works server-side and client-side and was really easy to use.
+However, being inline, it would hang our server when hashing large files.
+Our application see large file fairly frequently, so we built a utility which is *much* faster and runs async.
+That is this.
+
+### Highlights
+
+&#9679; Uses Promise syntax for async processing&nbsp; 
+&#9679; Invokes WebAssembly for large files&nbsp; 
+&#9679; *Only* accepts Buffer or Uint8Array as input; No Strings!&nbsp; 
+
+
 ## Javascript Calls And Parameters
 
-### Usage Summary
+### Usage example
 
-	Writer    = BABYLON.MeshWriter(scene, {scale:scale});       // Returns re-usable constructor
-	text1     = new Writer(                                     // Inserts text into scene, per options
-	                   "ABC",
-	                   {
-	                       "anchor": "center",
-	                       "letter-height": 50,
-	                       "color": "#1C3870",
-	                       "position": {
-	                           "z": 20
-  	                     }
-	                    }
-	             );
-	textMesh  = text1.getMesh()                                 // Returns a regular BABYLON mesh, which can
-	                                                            // be manipulated using standard methods
+	file      = fs.readFile("./path/to/file.mp4",calculateMD5);       // Get the data any which way you can
 
-&#9679; Helvetica Neue playground example:&nbsp;  https://www.babylonjs-playground.com/#PL752W#53  
-&#9679; Comic playground example:&nbsp;  https://www.babylonjs-playground.com/#PL752W#52
+	function calculateMD4 (err, data) {
+		if ( !err ) {
+			md5WASM(data)                                                 // Our function
+			    .then(function(hash){console.log(hash)})
+			    .catch(function(err){console.log(err)})
+		} else{
+			console.log(new Error("Problem reading file"))
+		}
+	}
+
 
 ### Superconstructor - BABYLON.MeshWriter()
 

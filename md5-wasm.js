@@ -11,7 +11,6 @@
 // A highly tuned WebAssembly function for larger files 
 // A JavaScript function for the others
 // 
-
 (function() {
 
   const md5JS           = makeMD5JS(),
@@ -39,32 +38,57 @@
 
   return md5;
 
+  //  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+  // This returns a Promise-like object (I was farting around, so sue me)
+  // which supports '.catch' and '.then'
   function md5(data){
     var md5String       = false;
-    if ( typeof Buffer === "function" ) {
-      if ( data && typeof data === "object" ) {
+
+    // Sift the incoming parameter and the environment
+    // If we are good, set buff
+    if ( data && typeof data === "object" ) {
+      if ( typeof Buffer === "function" ) {
         if ( data.constructor !== Buffer ) {
           if ( data.constructor === Uint8Array ) {
-            buff        = Buffer.from(data);
+            // buff        = Buffer.from(data);
+            console.log("No conversion!");
+            buff        = data
+          }else{
+            getCatch(new TypeError("First parameter must be Buffer or Uint8Array"))            
           }
         }else{
-          buff          = data;
+          buff          = data
+        }
+      }else{
+        if ( data.constructor === Uint8Array ) {
+          buff          = data
+        }else{
+          getCatch(new TypeError("First parameter must be Buffer or Uint8Array"))
         }
       }
+    }else{
+      getCatch(new TypeError("First parameter must be Buffer or Uint8Array"))
+    }
 
-      if ( buff && typeof buff === "object" && buff.constructor === Buffer ) {
-        if ( WebAssembly && !js && buff.length > bounder ) {
-          mem           = new WebAssembly.Memory({initial:(buff.length>32000000?buff.length>64000000?2048:1024:512)});
-          mem           = new WebAssembly.Memory({initial:1024});
-          memView       = new Uint32Array(mem.buffer);
-          importObj     = {imports:{}};
-          importObj.imports.mem  = mem;
-          importObj.imports.log  = console.log;
-          WebAssembly.instantiate(str2ab(atob(wasmB64)).buffer,importObj).then(giterdone)
-        }else{
-          md5String     = md5JS(buff);
-          getThen(md5String)
-        }
+    //  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  
+    // Make some choices based on the size of the incoming data
+    //   ~ Use WebAssembly or just JavaScript
+    //   ~ If Webassemly, allocate appropriate memory
+    // 
+    // Note that the WebAssembly mode compiles the WASM on the fly
+    // So that is managed in a separate function
+    // 
+    if ( buff && typeof buff === "object" && buff.constructor === Buffer ) {
+      if ( WebAssembly && !js && buff.length > bounder ) {
+        mem             = new WebAssembly.Memory({initial:(buff.length>32000000?buff.length>64000000?2048:1024:512)});
+        memView         = new Uint32Array(mem.buffer);
+        importObj       = {imports:{}};
+        importObj.imports.mem  = mem;
+        importObj.imports.log  = console.log;
+        WebAssembly.instantiate(str2ab(atob(wasmB64)).buffer,importObj).then(giterdone)
+      }else{
+        md5String       = md5JS(buff);
+        getThen(md5String)
       }
     }
     return returnObj
@@ -90,7 +114,7 @@
     setC                = obj.instance.exports.setC;
     setD                = obj.instance.exports.setD;
     setX                = obj.instance.exports.setX;
-    md5String     = md5WA(buff);
+    md5String           = md5WA(buff);
     getThen(md5String)
   }
 
@@ -270,10 +294,7 @@
     };
 
     return function (message, options) {
-      if (message === undefined || message === null)
-        throw new Error('Illegal argument ' + message);
-
-      var digestbytes   = crypt.wordsToBytes(md5WA(message, options)),
+      var digestbytes   = crypt.wordsToBytes(md5WA(message,options)),
           result        = options&&options.asBytes ?
                                digestbytes
                               :crypt.bytesToHex(digestbytes);
@@ -410,9 +431,6 @@
     };
 
     return function (message, options) {
-      if (message === undefined || message === null)
-        throw new Error('Illegal argument ' + message);
-
       var digestbytes = crypt.wordsToBytes(md5JS(message, options)),
           result      = options&&options.asBytes ?
                              digestbytes
