@@ -8,8 +8,8 @@
 
 // *-*=*  *=*-* *-*=*  *=*-* *-*=*  *=*-* *-*=*  *=*-* *-*=*  *=*-* *-*=*  *=*-*
 // This is two functions designed to achieve the same thing
-// A highly tuned WebAssembly function for larger files 
-// A JavaScript function for the others
+//   -> A highly tuned WebAssembly function for larger files 
+//   -> A JavaScript function for the others
 // 
 (function() {
 
@@ -24,16 +24,22 @@
   var   js              = false,
         onResult        = false,
         onError         = false;
-  var   buff,mem,memView,importObj,wasm,js=false,thenFun,catchFun;
-  var   loops,loop,loopA,loopB,loopC,loopD,getA,getB,getC,getD,getX,setA,setB,setC,setD,setX,loopA1;
+  var   buff,mem,memView,importObj,wasm,js=false,thenFun,catchFun,startTime;
+  var   loops,loop,getA,getB,getC,getD,getX,setA,setB,setC,setD,setX,loopA1;
   returnObj["then"]     = function(fun){thenFun=fun;getThen();return returnObj};
   returnObj["catch"]    = function(fun){catchFun=fun;getCatch();return returnObj};
 
   if ( typeof module === 'object' && module.exports ) {
-    module.exports      = md5;
+    module.exports      = md5
   }
   if ( typeof define === 'function' && define.amd ) {
     define ( 'md5' , [], function() { return md5 } )
+  }
+  if ( typeof window !== "undefined" ) {
+    window.md5WASM      = md5
+  }
+  if ( typeof global !== "undefined" ) {
+    global.md5WASM      = md5
   }
 
   return md5;
@@ -43,6 +49,8 @@
   // which supports '.catch' and '.then'
   function md5(data){
     var md5String       = false;
+
+    startTime           = new Date().getTime();
 
     // Sift the incoming parameter and the environment
     // If we are good, set buff
@@ -99,11 +107,6 @@
     wasm                = obj;
     loops               = obj.instance.exports.loops;
     loop                = obj.instance.exports.loop;
-    loopA               = obj.instance.exports.loopA;
-    loopA1              = obj.instance.exports.loopA1;
-    loopB               = obj.instance.exports.loopB;
-    loopC               = obj.instance.exports.loopC;
-    loopD               = obj.instance.exports.loopD;
     getA                = obj.instance.exports.getA;
     getB                = obj.instance.exports.getB;
     getC                = obj.instance.exports.getC;
@@ -511,7 +514,7 @@
     if(res){onResult=res}
     if(onResult){
       if ( thenFun && typeof thenFun === "function" ) {
-        thenFun(onResult);
+        thenFun(onResult,(new Date().getTime())-startTime);
         onResult        = false;
       }
     }
