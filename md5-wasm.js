@@ -30,24 +30,24 @@
   returnObj["catch"]    = function(fun){catchFun=fun;getCatch();return returnObj};
 
   if ( typeof module === 'object' && module.exports ) {
-    module.exports      = md5
+    module.exports      = md5WASM
   }
   if ( typeof define === 'function' && define.amd ) {
-    define ( 'md5' , [], function() { return md5 } )
+    define ( 'md5WASM' , [], function() { return md5WASM } )
   }
   if ( typeof window !== "undefined" ) {
-    window.md5WASM      = md5
+    window.md5WASM      = md5WASM
   }
   if ( typeof global !== "undefined" ) {
-    global.md5WASM      = md5
+    global.md5WASM      = md5WASM
   }
 
-  return md5;
+  return md5WASM;
 
   //  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
   // This returns a Promise-like object (I was farting around, so sue me)
   // which supports '.catch' and '.then'
-  function md5(data){
+  function md5WASM(data){
     var md5String       = false;
 
     startTime           = new Date().getTime();

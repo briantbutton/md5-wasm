@@ -1,8 +1,8 @@
 {
   "name": "md5-wasm",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Asynchronous MD5 calculator, employing WebAssembly for larger files",
-  "main": "./dist/md5-wasm.js",
+  "main": "./md5-wasm.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack"
