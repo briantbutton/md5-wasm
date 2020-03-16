@@ -13,19 +13,24 @@
 // 
 (function() {
 
+  var   onResult        = false,
+        onError         = false,
+        buff            = false;
+  var   mem,memView,importObj,wasm,js=false,thenFun,catchFun,startTime,atb;
+  var   loops,loop,getA,getB,getC,getD,getX,setA,setB,setC,setD,setX,loopA1;
   const md5JS           = makeMD5JS(),
         md5WA           = makeMD5WA(),
-        atob            = require("atob"),
         crypt           = makeCrypt(),
         biteSize        = 240*16*16,
-        bounder         = Math.floor(biteSize*16*1.066606667),
+        bounder         = Math.floor(biteSize*16*1.066666667),
+        upperLimit      = 268435456-65536,
         returnObj       = {};
-  const wasmB64         = "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";
-  var   js              = false,
-        onResult        = false,
-        onError         = false;
-  var   buff,mem,memView,importObj,wasm,js=false,thenFun,catchFun,startTime;
-  var   loops,loop,getA,getB,getC,getD,getX,setA,setB,setC,setD,setX,loopA1;
+  if (!atob && typeof require === "function" ) {
+    atb                 = require("atob")
+  }else{
+    atb                 = atob
+  }
+  const wasmB64         = atb("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");
   returnObj["then"]     = function(fun){thenFun=fun;getThen();return returnObj};
   returnObj["catch"]    = function(fun){catchFun=fun;getCatch();return returnObj};
 
@@ -48,34 +53,28 @@
   // This returns a Promise-like object (I was farting around, so sue me)
   // which supports '.catch' and '.then'
   function md5WASM(data){
-    var md5String       = false;
+    var md5String       = false,len;
 
     startTime           = new Date().getTime();
 
     // Sift the incoming parameter and the environment
     // If we are good, set buff
     if ( data && typeof data === "object" ) {
-      if ( typeof Buffer === "function" ) {
-        if ( data.constructor !== Buffer ) {
-          if ( data.constructor === Uint8Array ) {
-            // buff        = Buffer.from(data);
-            console.log("No conversion!");
-            buff        = data
+      if ( typeof Buffer === "function" && data.constructor === Buffer ) {
+        buff            = data
+      }else{
+        if ( data.constructor === Uint8Array || data.constructor === ArrayBuffer ) {
+          if ( data.constructor === ArrayBuffer ) {
+            buff        = new Uint8Array( data )
           }else{
-            getCatch(new TypeError("First parameter must be Buffer or Uint8Array"))            
+            buff        = data
           }
         }else{
-          buff          = data
-        }
-      }else{
-        if ( data.constructor === Uint8Array ) {
-          buff          = data
-        }else{
-          getCatch(new TypeError("First parameter must be Buffer or Uint8Array"))
+          getCatch(new TypeError("First parameter must be Buffer, ArrayBuffer or Uint8Array"))
         }
       }
     }else{
-      getCatch(new TypeError("First parameter must be Buffer or Uint8Array"))
+      getCatch(new TypeError("First parameter must be Buffer, ArrayBuffer or Uint8Array"))
     }
 
     //  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  
@@ -86,14 +85,15 @@
     // Note that the WebAssembly mode compiles the WASM on the fly
     // So that is managed in a separate function
     // 
-    if ( buff && typeof buff === "object" && buff.constructor === Buffer ) {
-      if ( WebAssembly && !js && buff.length > bounder ) {
-        mem             = new WebAssembly.Memory({initial:(buff.length>32000000?buff.length>64000000?2048:1024:512)});
+    if ( buff ) {
+      len               = buff.length;
+      if ( WebAssembly && !js && len > bounder ) {
+        mem             = new WebAssembly.Memory({initial:(len>32000000?len>64000000?len>128000000?4096:2048:1024:512)});
         memView         = new Uint32Array(mem.buffer);
         importObj       = {imports:{}};
         importObj.imports.mem  = mem;
         importObj.imports.log  = console.log;
-        WebAssembly.instantiate(str2ab(atob(wasmB64)).buffer,importObj).then(giterdone)
+        WebAssembly.instantiate(str2ab(wasmB64).buffer,importObj).then(giterdone)
       }else{
         md5String       = md5JS(buff);
         getThen(md5String)
@@ -103,20 +103,21 @@
   }
 
   function giterdone(obj){
-    var md5String       = false;
+    var md5String       = false,
+        exports         = obj.instance.exports;
     wasm                = obj;
-    loops               = obj.instance.exports.loops;
-    loop                = obj.instance.exports.loop;
-    getA                = obj.instance.exports.getA;
-    getB                = obj.instance.exports.getB;
-    getC                = obj.instance.exports.getC;
-    getD                = obj.instance.exports.getD;
-    getX                = obj.instance.exports.getX;
-    setA                = obj.instance.exports.setA;
-    setB                = obj.instance.exports.setB;
-    setC                = obj.instance.exports.setC;
-    setD                = obj.instance.exports.setD;
-    setX                = obj.instance.exports.setX;
+    loops               = exports.loops;
+    loop                = exports.loop;
+    getA                = exports.getA;
+    getB                = exports.getB;
+    getC                = exports.getC;
+    getD                = exports.getD;
+    getX                = exports.getX;
+    setA                = exports.setA;
+    setB                = exports.setB;
+    setC                = exports.setC;
+    setD                = exports.setD;
+    setX                = exports.setX;
     md5String           = md5WA(buff);
     getThen(md5String)
   }
