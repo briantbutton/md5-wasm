@@ -25,7 +25,7 @@
         bounder         = Math.floor(biteSize*16*1.066666667),
         upperLimit      = 268435456-65536,
         returnObj       = {};
-  if (!atob && typeof require === "function" ) {
+  if ( typeof atob !== "function" && typeof require === "function" ) {
     atb                 = require("atob")
   }else{
     atb                 = atob
@@ -516,6 +516,7 @@
     if(onResult){
       if ( thenFun && typeof thenFun === "function" ) {
         thenFun(onResult,(new Date().getTime())-startTime);
+        thenFun         = null;
         onResult        = false;
       }
     }
@@ -525,6 +526,7 @@
     if(onError){
       if ( catchFun && typeof catchFun === "function" ) {
         catchFun(onError);
+        catchFun        = null;
         onError         = false;
       }
     }
