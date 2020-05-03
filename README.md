@@ -1,41 +1,47 @@
 # MD5-WASM
 
-MD5-WASM is a *fast* asynchronous MD5 calculator, optimized for large files.&nbsp;
-It is called using a Promise-style syntax, with 'then' and 'catch'.&nbsp;
-WebAssembly is seamlessly used to calculate MD5 values for files above a certain size threshold.
+**MD5-WASM** is a *fast* asynchronous md5 calculator, optimized for large files.&nbsp;
+It is called using Promise syntax, with 'then' and 'catch'.&nbsp;
+WebAssembly is seamlessly applied to calculate values for files above a certain size threshold.
 
 ### Highlights
 
-&#9679; 30x faster than the most popular MD5 utility&nbsp;   
+&#9679; 30x faster than the most popular md5 utility&nbsp;   
 &#9679; Server-side (NodeJS) or client-side (browser)&nbsp;   
 &#9679; Non-blocking, uses Promise syntax&nbsp;   
 
-## Raison d'être &nbsp; (Reason for being)
+## Raison d'être &nbsp; 
 
 ### Faster and non-blocking
 
-Our MD5 hashing was initially performed using this wonderfully simple utility:&nbsp; 
-https://www.npmjs.com/package/md5&nbsp;&nbsp;
+Our MD5 hashing was initially performed using this simple and popular utility:&nbsp; 
+https://www.npmjs.com/package/md5&nbsp;
+(called &quot;**MD5**&quot; herein)&nbsp;&nbsp; 
 However, it is synchronous, blocking code execution, and slow &mdash; impractically slow for video files.&nbsp; 
-(On our low-powered server platform, we clock it as approaching 1 second per megabyte.)&nbsp; 
+(On our low-powered server platform, we clock it at about 1 second per megabyte.)&nbsp; 
 
 ### 30x faster?
 
-Yep, here are the benchmarks, run on our (slow) production server platform using NodeJS on Ubuntu.&nbsp; 
+On larger files, yes.&nbsp; 
+Here are the benchmarks, comparing MD5 to MD5-WASM, run on our (slow) production server platform using NodeJS on Ubuntu.&nbsp; 
 
-	                      ELAPSED MILLISECONDS            MEGABYTES PER SECOND
-	                     MD5           MD5-WASM          MD5           MD5-WASM
-	 2 Mbytes           2,100             330            0.95              6            
-	 4 Mbytes           4,000             330            1.00             12
-	 8 Mbytes           7,600             400            1.05             20
-	12 Mbytes          12,400             523            0.96             23
-	24 Mbytes          22,600             800            1.06             30
-	37 Mbytes          38,480           1,080            0.96             34
+	                   ELAPSED MILLISECONDS        MEGABYTES PER SECOND
+	                   MD5         MD5-WASM         MD5        MD5-WASM
+	 2 Mbytes         2,100           330          0.95             6            
+	 4 Mbytes         4,000           330          1.00            12
+	 8 Mbytes         7,600           400          1.05            20
+	12 Mbytes        12,400           523          0.96            23
+	24 Mbytes        22,600           800          1.06            30
+	37 Mbytes        38,480         1,080          0.96            34
 
-### Why the *huge* improvement?
+On our benchmark system, **MD5-WASM** gives up 300 ms just to complete WebAssembly instantiation.&nbsp; 
+After that, the relative performance gap between the two keeps growing, reaching 30x for a 37Mbyte file.&nbsp; 
+
+### Why the huge improvement?
 
 It would not be surprising to see a 3x improvement up to 5x improvement from WebAssembly but 30x is definitely surprising.&nbsp; 
-Here is a factor; JavaScript does a lot more work than WebAssembly &mdash; *billions* of number format conversions for a 50M file.&nbsp; 
+For md5 calculation, WebAssembly holds one other big advantage.&nbsp; 
+Any JavaScript implementation does a lot of number format conversion during md5 calculation, while WebAssembly implementations need not.&nbsp; 
 
 JavaScript runs native with 64-bit floating point numbers but all bitwise operations are done with 32-bit integers.&nbsp;
 MD5 calculation is _all_ bitwise operations.&nbsp; 

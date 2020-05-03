@@ -1,6 +1,6 @@
 {
   "name": "md5-wasm",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Asynchronous MD5 calculator, employing WebAssembly for larger files",
   "main": "./md5-wasm.js",
   "scripts": {
@@ -14,8 +14,9 @@
   "keywords": [
     "md5",
     "fast",
-    "asynchronous",
+    "promise",
     "async",
+    "javascript",
     "WebAssembly"
   ],
   "author": "Brian T Button",
