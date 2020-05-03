@@ -23,18 +23,17 @@ However, it is synchronous, blocking code execution, and slow &mdash; impractica
 
 Yep, here are the benchmarks, run on our (slow) production server platform using NodeJS on Ubuntu.&nbsp; 
 
-	                ELAPSED MILLISECONDS
-	              MD5             MD5WASM
-	 2 Mbytes    2,230              129
-	 4 Mbytes    3,910              123
-	 8 Mbytes    7,120              578
-	12 Mbytes   11,440              429
-	24 Mbytes   22,360              649
-	37 Mbytes   38,140            1,052
+	                      ELAPSED MILLISECONDS            MEGABYTES PER SECOND
+	                     MD5           MD5-WASM          MD5           MD5-WASM
+	 2 Mbytes           2,100             330            0.95              6            
+	 4 Mbytes           4,000             330            1.00             12
+	 8 Mbytes           7,600             400            1.05             20
+	12 Mbytes          12,400             523            0.96             23
+	24 Mbytes          22,600             800            1.06             30
+	37 Mbytes          38,480           1,080            0.96             34
 
 ### Why the *huge* improvement?
 
-Good question.&nbsp;
 It would not be surprising to see a 3x improvement up to 5x improvement from WebAssembly but 30x is definitely surprising.&nbsp; 
 Here is a factor; JavaScript does a lot more work than WebAssembly &mdash; *billions* of number format conversions for a 50M file.&nbsp; 
 
@@ -45,7 +44,7 @@ WebAssembly does not carry that extra burden and is intrinsically faster.
 
 ### Is there a downside?
 
-You need do NOTHING different to accomodate WebAssembly &mdash; MD5 WASM loads in a browser or Node environment exactly like a pure JavaScript utility would.&nbsp; 
+You need do nothing different to accomodate WebAssembly &mdash; MD5 WASM loads in a browser or Node environment exactly like a pure JavaScript utility would.&nbsp; 
 Unlike MD5, MD5-WASM does not take parameters in a string format.&nbsp; 
 There is no synchronous version; you must use a promise instead of a simple blocking function call.&nbsp; 
 
