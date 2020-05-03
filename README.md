@@ -14,16 +14,16 @@ WebAssembly is seamlessly applied to calculate values for files above a certain 
 
 ### Faster and non-blocking
 
-Our MD5 hashing was initially performed using this simple and popular utility:&nbsp; 
+Our md5 hashing was initially performed using this simple and popular utility:&nbsp; 
 https://www.npmjs.com/package/md5&nbsp;
 (called &quot;**MD5**&quot; herein)&nbsp;&nbsp; 
-However, it is synchronous, blocking code execution, and slow &mdash; impractically slow for video files.&nbsp; 
+However, **MD5** is synchronous, blocking code execution, and slow &mdash; impractically slow for video files.&nbsp; 
 (On our low-powered server platform, we clock it at about 1 second per megabyte.)&nbsp; 
 
 ### 30x faster?
 
 On larger files, yes.&nbsp; 
-Here are the benchmarks, comparing MD5 to MD5-WASM, run on our (slow) production server platform using NodeJS on Ubuntu.&nbsp; 
+Here are the benchmarks, comparing **MD5** to **MD5-WASM**, run on our (slow) production server platform using NodeJS on Ubuntu.&nbsp; 
 
 	                   ELAPSED MILLISECONDS        MEGABYTES PER SECOND
 	                   MD5         MD5-WASM         MD5        MD5-WASM
@@ -44,25 +44,24 @@ For md5 calculation, WebAssembly holds one other big advantage.&nbsp;
 Any JavaScript implementation does a lot of number format conversion during md5 calculation, while WebAssembly implementations need not.&nbsp; 
 
 JavaScript runs native with 64-bit floating point numbers but all bitwise operations are done with 32-bit integers.&nbsp;
-MD5 calculation is _all_ bitwise operations.&nbsp; 
-JavaScript is constantly converting floating point to integers, performing an operation, and then converting them back.&nbsp; 
-WebAssembly does not carry that extra burden and is intrinsically faster.
+Since calculating a checksum is just scads of bitwise operations, Javascript implementations spend more time converting between number formats than they do on the checksum itself.&nbsp; 
 
 ### Is there a downside?
 
-You need do nothing different to accomodate WebAssembly &mdash; MD5 WASM loads in a browser or Node environment exactly like a pure JavaScript utility would.&nbsp; 
-Unlike MD5, MD5-WASM does not take parameters in a string format.&nbsp; 
+You need do nothing different to accomodate WebAssembly &mdash; **MD5-WASM** loads in a browser or Node environment just like a pure JavaScript utility would.&nbsp; 
+Unlike **MD5**, **MD5-WASM** does not take parameters in a string format &mdash; you must convert the string before injecting it into **MD5-WASM**.&nbsp; 
 There is no synchronous version; you must use a promise instead of a simple blocking function call.&nbsp; 
 
 ## Javascript Calls And Parameters
 
 ### Usage example
 
-	data      = largeArrayBufferFromSomewhere;              // Get the data any which way you can
+	let data  = contentsOfAFile();                        // Get the data any which way you can
 
-	md5WASM(data)                                           // Our function
-	    .then(function(hash){ console.log(hash) })
-	    .catch(function(err){ console.log(err) })
+	// 'data' must be a Buffer, ArrayBuffer or Uint8Array
+	md5WASM(data)                                         // Our function
+	    .then( hash => console.log(hash) )
+	    .catch( err => console.log(err) )
 
 ## Loading MD5-WASM
 
@@ -79,3 +78,6 @@ You will find the function at *window.md5WASM*
 
 	md5WASM      = require("md5-wasm");
 
+## Problems, questions
+
+Please open an issue at the GitHub repo.
