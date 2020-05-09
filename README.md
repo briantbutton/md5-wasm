@@ -30,9 +30,9 @@ Here are the benchmarks, comparing **MD5** to **MD5-WASM**, run on our (slow) pr
 	 2 Mbytes         2,100           330          0.95             6            
 	 4 Mbytes         4,000           330          1.00            12
 	 8 Mbytes         7,600           400          1.05            20
-	12 Mbytes        12,400           523          0.96            23
-	24 Mbytes        22,600           800          1.06            30
-	37 Mbytes        38,480         1,080          0.96            34
+	12 Mbytes        12,400           490          0.96            24
+	24 Mbytes        23,600           700          1.02            34
+	37 Mbytes        38,500           990          0.96            37
 
 On our benchmark system, **MD5-WASM** gives up 300 ms just to complete WebAssembly instantiation.&nbsp; 
 After that, the relative performance gap between the two keeps growing, reaching 30x for a 37Mbyte file.&nbsp; 
