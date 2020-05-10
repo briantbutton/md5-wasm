@@ -97,9 +97,12 @@
     }
     function getThen(r){
       var res           = Boolean ( r ) ? r : result ;
-      if ( Boolean ( r ) ) { endTime = new Date().getTime() }
+      if ( Boolean ( r ) ) { endTime  = new Date().getTime() }
       if ( typeof thenFun === "function" ) {
-        thenFun(res,endTime-startTime)
+        if ( Boolean ( res ) ) {
+          thenFun(res,endTime-startTime);
+          thenFun       = catchFun    = null
+        }
       }else{
         if ( Boolean ( r ) ) { result = r }
       }
