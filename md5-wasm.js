@@ -7,26 +7,25 @@
 
 
 // *-*=*  *=*-* *-*=*  *=*-* *-*=*  *=*-* *-*=*  *=*-* *-*=*  *=*-* *-*=*  *=*-*
-// This is two functions designed to achieve the same thing
-//   -> A highly tuned WebAssembly function for larger files 
+// This contains two functions designed to achieve the same thing
+//   -> A WebAssembly function for larger files 
 //   -> A JavaScript function for the others
 // 
 (function() {
 
-  var   onResult        = false,
-        buff            = false;
-  var   crypt           = makeCrypt(),
+  const atb             = typeof atob === "function" ? atob : typeof Buffer === "function" ? nodeATOB : identity,
+        wasmB64         = atb("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"),
+        wasm            = WebAssembly && atb !== identity ? str2AB(wasmB64).buffer : false,
+        crypt           = makeCrypt(),
         biteSize        = 240*16*16,
         bounder         = Math.floor(biteSize*16*1.066666667),
-        upperLimit      = 268435456-65536,atb;
-  if ( typeof atob !== "function" && typeof require === "function" ) {
-    atb                 = require("atob")
-  }else{
-    atb                 = atob
-  }
-  const wasmB64         = atb("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"),
-        wasm            = str2ab(wasmB64).buffer;
+        upperLimit      = 268435456-65536,
+        parmTypeErrStr  = "Parameter must be Buffer, ArrayBuffer or Uint8Array",
+        tooBigErrStr    = "Parameter exceeds max size of 255.9 Mbytes";
 
+  if ( !wasm ) {
+    console.log("WebAssembly not available or WASM module could not be decoded; md5WASM will fall back to JavaScript")
+  }
   if ( typeof module === 'object' && module.exports ) {
     module.exports      = md5WASM
   }
@@ -35,9 +34,6 @@
   }
   if ( typeof window !== "undefined" ) {
     window.md5WASM      = md5WASM
-  }
-  if ( typeof global !== "undefined" ) {
-    global.md5WASM      = md5WASM
   }
 
   return md5WASM;
@@ -65,11 +61,11 @@
           if ( data.constructor === Uint8Array || data.constructor === ArrayBuffer ) {
             buff        = data.constructor === ArrayBuffer ? new Uint8Array ( data ) : data
           }else{
-            getCatch(new TypeError("First parameter must be Buffer, ArrayBuffer or Uint8Array"))
+            getCatch(new TypeError(parmTypeErrStr))
           }
         }
       }else{
-        getCatch(new TypeError("First parameter must be Buffer, ArrayBuffer or Uint8Array"))
+        getCatch(new TypeError(parmTypeErrStr))
       }
     }
 
@@ -80,12 +76,16 @@
     // 
     if ( buff ) {
       len               = buff.length;
-      if ( WebAssembly && len > bounder ) {
-        mem             = new WebAssembly.Memory({initial:(len>32000000?len>64000000?len>128000000?4096:2048:1024:512)});
-        memView         = new Uint32Array(mem.buffer);
-        imports         = {mem:mem,log:console.log};
-        importObj       = {imports};
-        WebAssembly.instantiate(wasm,importObj).then(giterdone)
+      if ( wasm && len > bounder ) {
+        if( len > upperLimit ) {
+          getCatch(new Error(tooBigErrStr))
+        }else{
+          mem           = new WebAssembly.Memory({initial:(len>32000000?len>64000000?len>128000000?4096:2048:1024:512)});
+          memView       = new Uint32Array(mem.buffer);
+          imports       = {mem:mem,log:console.log};
+          importObj     = {imports};
+          WebAssembly.instantiate(wasm,importObj).then(giterdone)
+        }
       }else{
         getThen(md5JS(buff))
       }
@@ -433,7 +433,7 @@
       return result
     }
   }
-  function str2ab(str) {
+  function str2AB(str) {
     var l,buff,buffView,i=-1;
     l                 = str.length-1;
     buff              = new ArrayBuffer(str.length);
@@ -443,62 +443,48 @@
     }
     return buffView
   }
+  function nodeATOB(str){
+    return Buffer.from(str,"base64").toString("binary")
+  }
+  function identity(x){
+    return x
+  }
 
   function makeCrypt() {
     var base64map  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
     return {
-      // Bit-wise rotation left
       rotl: function(n, b) {
         return (n << b) | (n >>> (32 - b));
       },
 
-      // Bit-wise rotation right
-      rotr: function(n, b) {
-        return (n << (32 - b)) | (n >>> b);
-      },
-
-      // Swap big-endian to little-endian and vice versa
       endian: function(n) {
-        // If number given, swap endian
         if (n.constructor == Number) {
           return crypt.rotl(n, 8) & 0x00FF00FF | crypt.rotl(n, 24) & 0xFF00FF00;
         }
-
-        // Else, assume array and swap all items
         for (var i = 0; i < n.length; i++)
           n[i] = crypt.endian(n[i]);
         return n;
       },
 
-      // Convert a byte array to big-endian 32-bit words
       bytesToWords: function(bytes) {
         for (var words = [], i = 0, b = 0; i < bytes.length; i++, b += 8)
           words[b >>> 5] |= bytes[i] << (24 - b % 32);
         return words;
       },
 
-      // Convert big-endian 32-bit words to a byte array
       wordsToBytes: function(words) {
         for (var bytes = [], b = 0; b < words.length * 32; b += 8)
           bytes.push((words[b >>> 5] >>> (24 - b % 32)) & 0xFF);
         return bytes;
       },
 
-      // Convert a byte array to a hex string
       bytesToHex: function(bytes) {
         for (var hex = [], i = 0; i < bytes.length; i++) {
           hex.push((bytes[i] >>> 4).toString(16));
           hex.push((bytes[i] & 0xF).toString(16));
         }
         return hex.join('');
-      },
-
-      // Convert a hex string to a byte array
-      hexToBytes: function(hex) {
-        for (var bytes = [], c = 0; c < hex.length; c += 2)
-          bytes.push(parseInt(hex.substr(c, 2), 16));
-        return bytes;
       }
     }
   }
