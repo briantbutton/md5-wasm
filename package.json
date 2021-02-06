@@ -1,6 +1,6 @@
 {
   "name": "md5-wasm",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Asynchronous MD5 calculator, employing WebAssembly for larger files",
   "main": "./md5-wasm.js",
   "scripts": {

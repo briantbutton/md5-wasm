@@ -1,7 +1,7 @@
 # MD5-WASM
 
 **MD5-WASM** is a *fast* asynchronous md5 calculator, optimized for large files.&nbsp;
-It is called using Promise syntax, with 'then' and 'catch'.&nbsp;
+It returns a Promise which resolves to the md5 string.&nbsp;
 WebAssembly is seamlessly applied to calculate values for files above a certain size threshold.
 
 ### Highlights

@@ -26,6 +26,7 @@
   if ( !wasm ) {
     console.log("WebAssembly not available or WASM module could not be decoded; md5WASM will fall back to JavaScript")
   }
+  // ^>
   if ( typeof module === 'object' && module.exports ) {
     module.exports      = md5WASM
   }
@@ -35,25 +36,25 @@
   if ( typeof window !== "undefined" ) {
     window.md5WASM      = md5WASM
   }
+  // <^
 
   return md5WASM;
 
   //  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
-  // This returns a Promise-like object (I was farting around, so sue me)
-  // which supports '.catch' and '.then'
+  // This returns a Promise with resolves to the checksum
   function md5WASM(data){
-    var   mem,memView,importObj,imports,len,buff,thenFun,catchFun,result,endTime;
+    var   mem,memView,importObj,imports,len,buff,result,endTime,initial;
     const md5JS         = makeMD5JS(),
           md5WA         = makeMD5WA(),
           returnObj     = {},
-          startTime     = new Date().getTime();
+          startTime     = new Date().getTime(),
+          log           = console.log;
 
-    returnObj["then"]   = function(fun){thenFun=fun;getThen();;return returnObj};
-    returnObj["catch"]  = function(fun){catchFun=fun;return returnObj};
+    return new Promise(function(resolve,reject){
 
-    // Sift the incoming parameter and the environment
-    // If we are good, set buff
-    if ( true ) {
+      //  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -   
+      // Sift the incoming parameter and the environment
+      // If we are good, set buff
       if ( data && typeof data === "object" ) {
         if ( typeof Buffer === "function" && data.constructor === Buffer ) {
           buff          = data
@@ -61,57 +62,43 @@
           if ( data.constructor === Uint8Array || data.constructor === ArrayBuffer ) {
             buff        = data.constructor === ArrayBuffer ? new Uint8Array ( data ) : data
           }else{
-            getCatch(new TypeError(parmTypeErrStr))
+            reject(new TypeError(parmTypeErrStr))
           }
         }
       }else{
-        getCatch(new TypeError(parmTypeErrStr))
+        reject(new TypeError(parmTypeErrStr))
       }
-    }
 
-    //  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  
-    // Make some choices based on the size of the incoming data
-    //   ~ Use WebAssembly or just JavaScript
-    //   ~ If Webassemly, allocate appropriate memory
-    // 
-    if ( buff ) {
-      len               = buff.length;
-      if ( wasm && len > bounder ) {
-        if( len > upperLimit ) {
-          getCatch(new Error(tooBigErrStr))
+      //  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  
+      // Make some choices based on the size of the incoming data
+      //   ~ Use WebAssembly or just JavaScript
+      //   ~ If Webassemly, allocate appropriate memory
+      // 
+      if ( buff ) {
+        len             = buff.length;
+        initial         = webAssemblyPages(len);
+        if ( wasm && len > bounder ) {
+          if( len > upperLimit ) {
+            reject(new Error(tooBigErrStr))
+          }else{
+            mem         = new WebAssembly.Memory({initial});
+            memView     = new Uint32Array(mem.buffer);
+            imports     = {mem,log};
+            importObj   = {imports};
+            WebAssembly.instantiate(wasm,importObj).then(giterdone)
+          }
         }else{
-          mem           = new WebAssembly.Memory({initial:(len>32000000?len>64000000?len>128000000?4096:2048:1024:512)});
-          memView       = new Uint32Array(mem.buffer);
-          imports       = {mem:mem,log:console.log};
-          importObj     = {imports};
-          WebAssembly.instantiate(wasm,importObj).then(giterdone)
+          finish(md5JS(buff))
         }
-      }else{
-        getThen(md5JS(buff))
       }
-    }
-    return returnObj;
-
-    function giterdone(obj){
-      getThen(md5WA(buff,obj.instance.exports,memView))
-    }
-    function getThen(r){
-      var res           = Boolean ( r ) ? r : result ;
-      if ( Boolean ( r ) ) { endTime  = new Date().getTime() }
-      if ( typeof thenFun === "function" ) {
-        if ( Boolean ( res ) ) {
-          thenFun(res,endTime-startTime);
-          thenFun       = catchFun    = null
-        }
-      }else{
-        if ( Boolean ( r ) ) { result = r }
+      function giterdone(obj){
+        finish(md5WA(buff,obj.instance.exports,memView))
       }
-    }
-    function getCatch(err){
-      if ( typeof catchFun === "function" ) {
-        catchFun(err)
+      function finish(result){
+        endTime           = new Date().getTime();
+        resolve(result,endTime-startTime);
       }
-    }
+    })
   }
 
   function makeMD5WA(){
@@ -426,11 +413,8 @@
     };
 
     return function (message, options) {
-      var digestbytes = crypt.wordsToBytes(md5JS(message, options)),
-          result      = options&&options.asBytes ?
-                             digestbytes
-                            :crypt.bytesToHex(digestbytes);
-      return result
+      var digestbytes = crypt.wordsToBytes(md5JS(message, options));
+      return options&&options.asBytes?digestbytes:crypt.bytesToHex(digestbytes)
     }
   }
   function str2AB(str) {
@@ -448,6 +432,9 @@
   }
   function identity(x){
     return x
+  }
+  function webAssemblyPages(len){
+    return len>32000000?len>64000000?len>128000000?4096:2048:1024:512
   }
 
   function makeCrypt() {
