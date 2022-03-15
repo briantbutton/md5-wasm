@@ -60,29 +60,29 @@ There is no synchronous version; you must use a promise instead of a simple bloc
 ## Javascript Calls And Parameters
 
 ### Usage example
+```js
+let data  = contentsOfAFile();                        // Get the data any which way you can
 
-	let data  = contentsOfAFile();                        // Get the data any which way you can
-
-	// 'data' must be a Buffer, ArrayBuffer or Uint8Array
-	md5WASM(data)                                         // Our function
-	    .then( hash => console.log(hash) )
-	    .catch( err => console.log(err) )
-
+// 'data' must be a Buffer, ArrayBuffer or Uint8Array
+md5WASM(data)                                         // Our function
+    .then( hash => console.log(hash) )
+    .catch( err => console.log(err) )
+```
 ## Loading MD5-WASM
 
 At less than 32K, the code file does not justify minification.&nbsp;
 It is all-inclusive and has no external dependencies.&nbsp;
 
 ### HTML tag
-
-	<script type="text/javascript" src="path/md5-wasm.js"></script>
-
+```html	
+<script type="text/javascript" src="path/md5-wasm.js"></script>
+```
 You will find the function at *window.md5WASM*
 
 ### In NodeJS
-
-	md5WASM      = require("md5-wasm");
-
+```js
+md5WASM      = require("md5-wasm");
+```
 ## Problems, questions
 
 Please open an issue at the GitHub repo.
